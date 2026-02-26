@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Bank Management System</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════════════════ -->
+<div id="auth-screen" class="auth-screen" style="display:none">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon">📚</div>
+      <h1>Book Bank</h1>
+      <p>Management System</p>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Register</div>
+    </div>
+
+    <!-- Login Form -->
+    <form id="form-login" class="auth-form" onsubmit="submitLogin(event)">
+      <div id="login-error" class="alert alert-error" style="display:none"></div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>User ID</label>
+        <input type="text" name="lid" placeholder="e.g. S001 or ADM01" required />
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label>Password</label>
+        <input type="password" name="lpass" placeholder="Your password" required />
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Sign In</button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="form-register" class="auth-form" style="display:none" onsubmit="submitRegister(event)">
+      <div id="reg-error" class="alert alert-error" style="display:none"></div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>User ID</label>
+        <input type="text" name="rid" placeholder="e.g. S001" required />
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Password</label>
+        <input type="password" name="rpass" placeholder="Choose a password" required />
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label>Role</label>
+        <select name="rrole">
+          <option value="Student">Student</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Create Account</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════════════ -->
+<div id="app-wrapper" style="display:none;width:100%;min-height:100vh">
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar" class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">📚</div>
+      <h1>Book Bank</h1>
+      <span>Management System</span>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section-title">Overview</div>
+      <a class="nav-link" data-page="dashboard">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+
+      <div class="nav-section-title">Library</div>
+      <a class="nav-link" data-page="books">
+        <span class="nav-icon">📖</span> Books
+      </a>
+      <a class="nav-link" data-page="students">
+        <span class="nav-icon">🎓</span> Students
+      </a>
+      <a class="nav-link" data-page="transactions">
+        <span class="nav-icon">🔁</span> Transactions
+      </a>
+
+      <div class="nav-section-title">Analytics</div>
+      <a class="nav-link" data-page="reports">
+        <span class="nav-icon">📈</span> Reports
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-badge">
+        <div class="user-avatar" id="sidebar-avatar">U</div>
+        <div class="user-info">
+          <strong id="sidebar-user-name">—</strong>
+          <span id="sidebar-user-role"></span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()" style="margin-top:12px;width:100%;justify-content:center">
+        Sign Out
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn btn-ghost btn-icon" onclick="toggleSidebar()" style="display:none" id="menu-btn">☰</button>
+        <span id="topbar-title" class="topbar-title">Dashboard</span>
+      </div>
+      <div class="topbar-actions" id="topbar-actions"></div>
+    </header>
+
+    <div class="content">
+
+      <!-- ── DASHBOARD PAGE ────────────────────── -->
+      <div id="page-dashboard" class="page">
+        <div class="section-header">
+          <div>
+            <h2>Dashboard</h2>
+            <p>Library overview at a glance</p>
+          </div>
+          <button class="btn btn-ghost" onclick="loadDashboard()">↻ Refresh</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card gold">
+            <div class="stat-icon">📖</div>
+            <div class="stat-value" id="dash-total-books">—</div>
+            <div class="stat-label">Total Books</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-icon">🎓</div>
+            <div class="stat-value" id="dash-total-students">—</div>
+            <div class="stat-label">Students</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">📤</div>
+            <div class="stat-value" id="dash-issued">—</div>
+            <div class="stat-label">Currently Issued</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-value" id="dash-overdue">—</div>
+            <div class="stat-label">Overdue</div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><h3>Quick Actions</h3></div>
+          <div class="card-body">
+            <div class="quick-actions">
+              <div class="quick-tile" onclick="navigateTo('books'); setTimeout(() => openModal('add-book-modal'), 300)">
+                <div class="tile-icon">➕</div>
+                <div class="tile-label">Add Book</div>
+              </div>
+              <div class="quick-tile" onclick="navigateTo('students'); setTimeout(() => openModal('add-student-modal'), 300)">
+                <div class="tile-icon">👤</div>
+                <div class="tile-label">Add Student</div>
+              </div>
+              <div class="quick-tile" onclick="navigateTo('transactions'); setTimeout(() => openModal('issue-modal'), 300)">
+                <div class="tile-icon">📤</div>
+                <div class="tile-label">Issue Book</div>
+              </div>
+              <div class="quick-tile" onclick="navigateTo('transactions'); setTimeout(() => openModal('return-modal'), 300)">
+                <div class="tile-icon">📥</div>
+                <div class="tile-label">Return Book</div>
+              </div>
+              <div class="quick-tile" onclick="navigateTo('reports')">
+                <div class="tile-icon">📊</div>
+                <div class="tile-label">Reports</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overdue Alert -->
+        <div id="overdue-alert" class="card" style="display:none;border-color:rgba(224,92,92,0.3)">
+          <div class="card-header" style="border-bottom-color:rgba(224,92,92,0.2)">
+            <h3 style="color:var(--red)">Overdue Books</h3>
+          </div>
+          <div class="card-body" id="overdue-alert"></div>
+        </div>
+
+        <!-- Recent Issued -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Currently Issued</h3>
+            <button class="btn btn-ghost btn-sm" onclick="navigateTo('reports')">View All</button>
+          </div>
+          <div class="card-body" id="recent-issued-body">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BOOKS PAGE ─────────────────────────── -->
+      <div id="page-books" class="page">
+        <div class="section-header">
+          <div>
+            <h2>Books</h2>
+            <p><span id="books-count">0</span> books in library</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div class="search-bar">
+              <span class="search-icon">🔍</span>
+              <input id="books-search" type="text" placeholder="Search books…" oninput="filterBooks()" />
+            </div>
+            <button class="btn btn-primary" onclick="openModal('add-book-modal')">+ Add Book</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Book ID</th>
+                  <th>Title</th>
+                  <th>Author</th>
+                  <th>Subject</th>
+                  <th>Edition</th>
+                  <th>Publisher</th>
+                  <th>Availability</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="books-tbody">
+                <tr><td colspan="8"><div class="loading"><div class="spinner"></div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STUDENTS PAGE ──────────────────────── -->
+      <div id="page-students" class="page">
+        <div class="section-header">
+          <div>
+            <h2>Students</h2>
+            <p><span id="students-count">0</span> registered students</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div class="search-bar">
+              <span class="search-icon">🔍</span>
+              <input id="students-search" type="text" placeholder="Search students…" oninput="filterStudents()" />
+            </div>
+            <button class="btn btn-primary" onclick="openModal('add-student-modal')">+ Add Student</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Branch</th>
+                  <th>Year</th>
+                  <th>Semester</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="students-tbody">
+                <tr><td colspan="7"><div class="loading"><div class="spinner"></div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TRANSACTIONS PAGE ──────────────────── -->
+      <div id="page-transactions" class="page">
+        <div class="section-header">
+          <div>
+            <h2>Transactions</h2>
+            <p><span id="txn-count">0</span> total transactions</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <div class="search-bar">
+              <span class="search-icon">🔍</span>
+              <input id="txn-search" type="text" placeholder="Search by ID…" oninput="filterTransactions()" />
+            </div>
+            <select id="txn-status-filter" onchange="filterTransactions()"
+              style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:7px 12px;color:var(--text);font-size:0.86rem;font-family:'DM Sans',sans-serif;outline:none">
+              <option value="">All Status</option>
+              <option value="issue">Issued</option>
+              <option value="returned">Returned</option>
+              <option value="overdue">Overdue</option>
+            </select>
+            <button class="btn btn-primary" onclick="openModal('issue-modal'); document.getElementById('iDueDateInput').value = daysFromToday(14)">📤 Issue</button>
+            <button class="btn btn-ghost" onclick="openModal('return-modal')">📥 Return</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Txn ID</th>
+                  <th>Student ID</th>
+                  <th>Book ID</th>
+                  <th>Status</th>
+                  <th>Issue Date</th>
+                  <th>Due Date</th>
+                  <th>Return Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="txn-tbody">
+                <tr><td colspan="8"><div class="loading"><div class="spinner"></div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REPORTS PAGE ───────────────────────── -->
+      <div id="page-reports" class="page">
+        <div class="section-header">
+          <div>
+            <h2>Reports</h2>
+            <p>Library analytics & status</p>
+          </div>
+          <button class="btn btn-ghost" onclick="loadReports()">↻ Refresh</button>
+        </div>
+
+        <!-- Overdue -->
+        <div class="card">
+          <div class="card-header" style="border-bottom-color:rgba(224,92,92,0.2)">
+            <h3 style="color:var(--red)">⚠ Overdue Books <span id="overdue-count" style="font-size:0.8rem;color:var(--text-muted);font-family:'DM Mono',monospace;font-weight:400"></span></h3>
+            <button class="btn btn-ghost btn-sm" onclick="loadOverdue()">↻</button>
+          </div>
+          <div class="card-body" id="overdue-body"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+
+        <!-- Issued -->
+        <div class="card">
+          <div class="card-header">
+            <h3>📤 Currently Issued <span id="issued-count" style="font-size:0.8rem;color:var(--text-muted);font-family:'DM Mono',monospace;font-weight:400"></span></h3>
+            <button class="btn btn-ghost btn-sm" onclick="loadIssued()">↻</button>
+          </div>
+          <div class="card-body" id="issued-body"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+
+        <!-- Available -->
+        <div class="card">
+          <div class="card-header">
+            <h3>✅ Available Books <span id="available-count" style="font-size:0.8rem;color:var(--text-muted);font-family:'DM Mono',monospace;font-weight:400"></span></h3>
+            <button class="btn btn-ghost btn-sm" onclick="loadAvailable()">↻</button>
+          </div>
+          <div class="card-body" id="available-body"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app-wrapper -->
+
+
+<!-- ══════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════ -->
+
+<!-- Add Book -->
+<div id="add-book-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add New Book</h3>
+      <button class="modal-close" onclick="closeModal('add-book-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="add-book-form" onsubmit="submitAddBook(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Book ID *</label>
+            <input type="text" name="bid" placeholder="e.g. B001" required />
+          </div>
+          <div class="form-group">
+            <label>Title *</label>
+            <input type="text" name="btitle" placeholder="Book title" required />
+          </div>
+          <div class="form-group">
+            <label>Author *</label>
+            <input type="text" name="bauthor" placeholder="Author name" required />
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <input type="text" name="bsubject" placeholder="e.g. CS, Math" />
+          </div>
+          <div class="form-group">
+            <label>Edition</label>
+            <input type="number" name="bedition" placeholder="e.g. 9" min="1" />
+          </div>
+          <div class="form-group">
+            <label>Publisher</label>
+            <input type="text" name="bpublisher" placeholder="Publisher name" />
+          </div>
+          <div class="form-group">
+            <label>Year of Publication</label>
+            <input type="number" name="byear" placeholder="e.g. 2020" min="1900" max="2099" />
+          </div>
+          <div class="form-group">
+            <label>Total Copies *</label>
+            <input type="number" name="bcopies" placeholder="e.g. 5" min="1" required />
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:0;margin-top:20px">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('add-book-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Book</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Book Detail -->
+<div id="book-detail-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Book Details</h3>
+      <button class="modal-close" onclick="closeModal('book-detail-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="book-detail-body"></div>
+  </div>
+</div>
+
+<!-- Add Student -->
+<div id="add-student-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add New Student</h3>
+      <button class="modal-close" onclick="closeModal('add-student-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="add-student-form" onsubmit="submitAddStudent(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Student ID *</label>
+            <input type="text" name="sid" placeholder="e.g. ST001" required />
+          </div>
+          <div class="form-group">
+            <label>User ID *</label>
+            <input type="text" name="suid" placeholder="Linked user (e.g. S001)" required />
+          </div>
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" name="sname" placeholder="Student's full name" required />
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" name="semail" placeholder="student@example.com" required />
+          </div>
+          <div class="form-group">
+            <label>Branch *</label>
+            <input type="text" name="sbranch" placeholder="e.g. CSE, ECE" required />
+          </div>
+          <div class="form-group">
+            <label>Year *</label>
+            <select name="syear" required>
+              <option value="">Select Year</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Semester *</label>
+            <select name="ssem" required>
+              <option value="">Select Semester</option>
+              <option value="1">Sem 1</option>
+              <option value="2">Sem 2</option>
+              <option value="3">Sem 3</option>
+              <option value="4">Sem 4</option>
+              <option value="5">Sem 5</option>
+              <option value="6">Sem 6</option>
+              <option value="7">Sem 7</option>
+              <option value="8">Sem 8</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:0;margin-top:20px">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('add-student-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Student Detail -->
+<div id="student-detail-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Student Details</h3>
+      <button class="modal-close" onclick="closeModal('student-detail-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="student-detail-body"></div>
+  </div>
+</div>
+
+<!-- Issue Book -->
+<div id="issue-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📤 Issue Book</h3>
+      <button class="modal-close" onclick="closeModal('issue-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="issue-form" onsubmit="submitIssueBook(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Transaction ID *</label>
+            <input type="text" name="txnId" placeholder="e.g. T001" required />
+          </div>
+          <div class="form-group">
+            <label>Student ID *</label>
+            <input type="text" name="iStudentId" placeholder="e.g. ST001" required />
+          </div>
+          <div class="form-group">
+            <label>Book ID *</label>
+            <input type="text" name="iBookId" placeholder="e.g. B001" required />
+          </div>
+          <div class="form-group">
+            <label>Due Date *</label>
+            <input type="date" id="iDueDateInput" name="iDueDate" required />
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:0;margin-top:20px">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('issue-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Issue Book</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Return Book -->
+<div id="return-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📥 Return Book</h3>
+      <button class="modal-close" onclick="closeModal('return-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="return-form" onsubmit="submitReturnBook(event)">
+        <div class="form-group" style="margin-bottom:20px">
+          <label>Transaction ID *</label>
+          <input type="text" name="rTxnId" placeholder="e.g. T001" required />
+        </div>
+        <p style="font-size:0.82rem;color:var(--text-muted)">The return date will be recorded as today's date.</p>
+        <div class="modal-footer" style="padding:0;margin-top:20px">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('return-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Return Book</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST CONTAINER ─── -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- ── SCRIPTS ────────────────────────────────── -->
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/books.js"></script>
+<script src="js/students.js"></script>
+<script src="js/transactions.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+  // Mobile menu button visibility
+  const mq = window.matchMedia('(max-width: 768px)');
+  function handleMQ(e) {
+    document.getElementById('menu-btn').style.display = e.matches ? 'flex' : 'none';
+  }
+  mq.addEventListener('change', handleMQ);
+  handleMQ(mq);
+</script>
+
+</body>
+</html>
