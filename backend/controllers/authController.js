@@ -1,56 +1,60 @@
 import bcrypt from 'bcrypt';
-import * as userModel from '../models/userModel.js';
+import jwt from 'jsonwebtoken';
+import db from '../config/db.js';
 
-export const register = (req, res, next) => {
+export const signup = async (req, res) => {
     try {
-        const { id, password, role } = req.body;
+        const { full_name, email, password, role } = req.body;
 
-        const existingUser = userModel.findUserById.get(id);
-
-        if (existingUser) {
-            throw new Error('User already exists');
+        // 1. Check if user already exists
+        const userExists = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+        if (userExists) {
+            return res.status(400).json({ message: 'User already exists with this email.' });
         }
 
-        const password_hash = bcrypt.hashSync(password, 10);
+        // 2. Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        userModel.createUser.run(id, password_hash, role);
+        // 3. Insert user into DB
+        const stmt = db.prepare('INSERT INTO users (full_name, email, password, role) VALUES (?, ?, ?, ?)');
+        const info = stmt.run(full_name, email, hashedPassword, role);
 
-        res.json({
-            success: true,
-            message: 'User registered successfully'
-        });
-
-    } catch (err) {
-        next(err);
+        res.status(201).json({ message: 'User created successfully', userId: info.lastInsertRowid });
+    } catch (error) {
+        res.status(500).json({ message: 'Error creating user', error: error.message });
     }
 };
 
-export const login = (req, res, next) => {
+export const login = async (req, res) => {
     try {
-        const { id, password } = req.body;
+        const { email, password } = req.body;
 
-        const user = userModel.findUserById.get(id);
-
+        // 1. Find user by email
+        const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
         if (!user) {
-            throw new Error('Invalid credentials');
+            return res.status(404).json({ message: 'User not found.' });
         }
 
-        const validPassword = bcrypt.compareSync(password, user.password_hash);
-
-        if (!validPassword) {
-            throw new Error('Invalid credentials');
+        // 2. Compare passwords
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid credentials.' });
         }
+
+        // 3. Generate JWT Token
+        const token = jwt.sign(
+            { userId: user.user_id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
 
         res.json({
-            success: true,
             message: 'Login successful',
-            user: {
-                id: user.id,
-                role: user.role
-            }
+            token,
+            role: user.role,
+            userName: user.full_name
         });
-
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        res.status(500).json({ message: 'Error during login', error: error.message });
     }
 };

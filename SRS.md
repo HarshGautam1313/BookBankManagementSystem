@@ -1,355 +1,126 @@
-# Software Requirements Specification (SRS)  
-## Book Bank Management System
+# Software Requirements Specification (SRS)
+## Project Title: Smart Book Bank Management System (S-BBMS)
 
 ---
 
-# 1. Introduction
+## 1. Introduction
 
-## 1.1 Purpose
+### 1.1 Purpose
+The purpose of this document is to provide a detailed description of the Smart Book Bank Management System (S-BBMS). It outlines the functional and non-functional requirements, the system architecture, and the design constraints. This document serves as the primary blueprint for the development and testing phases of the project.
 
-This document defines the Software Requirements Specification (SRS) for the **Book Bank Management System**.
+### 1.2 Project Scope
+S-BBMS is a web-based application designed for offline library book banks. Unlike a traditional library, a book bank typically manages textbooks and academic resources for students over longer durations (e.g., a semester). 
 
-The purpose of this system is to automate the management of physical textbooks maintained under a book bank scheme in an academic institution.
+**The system will provide:**
+* Digital record-keeping of book inventory.
+* Automated tracking of issuance and returns.
+* An Admin dashboard for analytics.
+* An ML-powered Demand Prediction module to forecast book needs for upcoming semesters.
+* A Personalized Recommendation system for students based on borrowing patterns.
 
-The system is designed to:
-
-- Maintain book inventory records  
-- Manage student information  
-- Handle book issue and return operations  
-- Track book availability  
-
-The initial version of the system focuses strictly on basic operational management. Advanced features such as predictive analytics, automated notifications, or integration with external systems are intentionally excluded.
-
-This SRS is intended for:
-
-- The developer building the system  
-- Project reviewers (faculty / examiner)  
-- Future maintainers of the application  
-
----
-
-## 1.2 Scope
-
-The scope of the Book Bank Management System is intentionally limited to core book bank operations.
-
-The system will:
-
-- Store and manage book records  
-- Store and manage student records  
-- Handle book issue transactions  
-- Handle book return transactions  
-- Maintain accurate stock levels  
-- Generate basic reports  
-
-The system will not:
-
-- Perform advanced statistical analysis  
-- Provide AI-based recommendations  
-- Integrate with external academic systems  
-- Support distributed multi-library synchronization  
-
-This scoped approach ensures simplicity, reliability, and ease of implementation.
+### 1.3 Definitions, Acronyms, and Abbreviations
+| Term | Definition |
+| :--- | :--- |
+| **S-BBMS** | Smart Book Bank Management System |
+| **Admin** | The librarian or staff member managing the system |
+| **CRUD** | Create, Read, Update, Delete |
+| **ML** | Machine Learning |
+| **MVP** | Minimum Viable Product |
+| **SQLite** | A lightweight, file-based relational database engine |
 
 ---
 
-## 1.3 Definitions, Acronyms, Abbreviations
+## 2. Overall Description
 
-**Book Bank**: A collection of physical textbooks issued to students for long-term academic use.
+### 2.1 Product Perspective
+S-BBMS is a standalone web application following a **Client-Server Architecture**. 
+* **Frontend:** Developed in React.js for a dynamic user interface.
+* **Backend:** Developed in Node.js and Express.js to handle API requests.
+* **Database:** SQLite for lightweight and portable data storage.
+* **ML Layer:** Python scripts for data analysis and predictions, executed via Node.js child processes.
 
-**Inventory**: The total number of copies and currently available copies of books.
+### 2.2 User Classes and Characteristics
+#### 2.2.1 Administrator (Librarian)
+* **Role:** Full system control.
+* **Responsibilities:** Managing book stock, student records, processing transactions, and analyzing demand trends.
+* **Technical Level:** Basic computer literacy.
 
-**Transaction**: An event involving issuing or returning a book.
+#### 2.2.2 Student
+* **Role:** End-user/Borrower.
+* **Responsibilities:** Searching for books, checking availability, viewing personal borrowing history, and receiving academic recommendations.
+* **Technical Level:** General web navigation skills.
 
-**Admin / Librarian**: Authorized personnel responsible for managing the system.
+### 2.3 Design and Implementation Constraints
+* **Language Constraints:** Backend must be Node.js; ML logic must be Python.
+* **Database Constraint:** Must use SQLite to ensure zero-configuration deployment for the lab demo.
+* **Deployment:** Localhost deployment accessible via a local network browser.
 
-**Available Copies**: Number of book copies currently eligible for issuing.
-
----
-
----
-
-# 2. Overall Description
-
----
-
-## 2.1 Product Perspective
-
-The Book Bank Management System is a standalone application designed to replace manual record-keeping systems.
-
-The system follows a modular architecture consisting of:
-
-- Book Management Module  
-- Student Management Module  
-- Transaction Module  
-- Reporting Module  
-- Database Layer (SQLite)
-
-The system operates independently without dependency on external services.
+### 2.4 Assumptions and Dependencies
+* It is assumed that the admin will input synthetic historical data to allow the ML model to generate meaningful predictions.
+* The system depends on the Python runtime being installed on the host machine.
 
 ---
 
-## 2.2 Product Functions
+## 3. System Features (Functional Requirements)
 
-The system shall provide the following capabilities:
+### 3.1 User Management & Authentication
+* **FR 1.1:** The system shall allow users to create accounts and log in securely.
+* **FR 1.2:** The system shall differentiate between 'Admin' and 'Student' roles upon authentication.
+* **FR 1.3:** Admins shall have the authority to modify or delete student accounts.
 
-- Add, update, and delete book records  
-- Maintain student information  
-- Issue books to students  
-- Process returned books  
-- Track book availability  
-- Prevent invalid transactions  
-- Generate basic operational reports  
+### 3.2 Inventory Management (Admin Only)
+* **FR 2.1:** The Admin shall be able to add new books (Title, Author, ISBN, Category, Quantity).
+* **FR 2.2:** The Admin shall be able to update or remove book records.
+* **FR 2.3:** The system shall automatically track the status of each book (Available / Issued).
 
-The following features are explicitly out of scope:
+### 3.3 Transaction Management
+* **FR 3.1:** The Admin shall be able to issue a book to a student by linking `BookID` to `UserID`.
+* **FR 3.2:** The system shall record the `IssueDate` and track the `ReturnDate`.
+* **FR 3.3:** The Admin shall be able to mark a book as "Returned," updating the inventory status to "Available."
+* **FR 3.4:** The system shall maintain a historical log of all transactions.
 
-- Predictive analytics  
-- Automated email/SMS notifications  
-- Advanced visualization dashboards  
-- Cloud synchronization  
+### 3.4 Smart Features (ML Layer)
+* **FR 4.1 (Demand Prediction):** The system shall analyze transaction patterns using Python to identify high-demand books for the upcoming semester.
+* **FR 4.2 (Book Recommendation):** The system shall suggest books to students based on the category of books they have previously borrowed (Content-based filtering).
 
----
-
-## 2.3 User Characteristics
-
-### **Primary User: Admin / Librarian**
-
-User Profile:
-
-- Basic computer literacy  
-- No advanced technical knowledge required  
-- Responsible for managing book bank operations  
-
-The system is designed for ease of use with minimal training requirements.
+### 3.5 Analytics and Reporting
+* **FR 5.1:** The Admin shall be able to view a dashboard showing total books, active loans, and most demanded categories.
 
 ---
 
-## 2.4 Operating Environment
+## 4. External Interface Requirements
 
-- **Frontend**: HTML, CSS, JavaScript  
-- **Backend**: Python (Flask)  
-- **Database**: SQLite  
-- **Platform**: Desktop / Localhost Web Application  
-- **Operating System**: Windows / Linux  
+### 4.1 User Interface (UI)
+* **Framework:** React.js with a responsive layout.
+* **Admin View:** A dashboard with sidebar navigation for Inventory, Transactions, and Analytics.
+* **Student View:** A clean search interface and a personalized "Recommended for You" section.
 
----
-
-## 2.5 Design and Implementation Constraints
-
-The system must:
-
-- Maintain accurate stock information  
-- Prevent over-issuing of books  
-- Ensure data consistency  
-- Operate efficiently  
-- Store data locally  
+### 4.2 Software Interfaces
+* **Database Interface:** Node.js interacts with SQLite via the `sqlite3` driver or Sequelize ORM.
+* **ML Interface:** Node.js executes Python scripts using the `child_process` module and captures output via `stdout`.
 
 ---
 
-## 2.6 Assumptions and Dependencies
+## 5. Non-Functional Requirements
 
-### **Assumptions**
+### 5.1 Performance
+* API responses for search and inventory queries should be under 2 seconds.
+* ML calculations should be handled efficiently to avoid blocking the main Node.js event loop.
 
-- System is operated by authorized personnel  
-- Initial data is entered correctly  
-- Physical books are managed outside the software  
+### 5.2 Security
+* User passwords must be hashed using `bcrypt` before storage.
+* Role-Based Access Control (RBAC) must prevent students from accessing Admin API endpoints.
 
-### **Dependencies**
-
-- Python runtime environment  
-- SQLite database engine  
-- Web browser  
-
----
+### 5.3 Reliability & Maintainability
+* The system must handle edge cases (e.g., issuing a book that is already out of stock) gracefully.
+* The codebase must follow a modular structure (Frontend $\rightarrow$ Backend $\rightarrow$ ML Scripts).
 
 ---
 
-# 3. System Features and Requirements
-
----
-
-## 3.1 Book Management
-
-**Description**  
-The system shall manage book inventory details.
-
-**Functional Requirements**
-
-- The system shall allow adding new book records  
-- The system shall allow updating book details  
-- The system shall allow deleting book records  
-- The system shall track total copies  
-- The system shall track available copies  
-
----
-
-## 3.2 Student Management
-
-**Description**  
-The system shall manage student information.
-
-**Functional Requirements**
-
-- The system shall allow adding student records  
-- The system shall allow updating student details  
-- The system shall allow deleting student records  
-- The system shall uniquely identify students  
-
----
-
-## 3.3 Book Issue
-
-**Description**  
-The system shall issue books to students.
-
-**Functional Requirements**
-
-- The system shall verify book availability  
-- The system shall prevent issuing unavailable books  
-- The system shall reduce available copies upon issue  
-- The system shall record issue date  
-- The system shall record due date  
-
-**Validation Rules**
-
-- A book cannot be issued if no copies are available  
-- Invalid student or book selection shall be rejected  
-
----
-
-## 3.4 Book Return
-
-**Description**  
-The system shall process book returns.
-
-**Functional Requirements**
-
-- The system shall update available copies  
-- The system shall record return date  
-- The system shall prevent duplicate returns  
-
-**Optional Enhancement**
-
-- Fine calculation for overdue returns  
-
----
-
-## 3.5 Reporting Module
-
-**Description**  
-The system shall generate basic reports.
-
-**Functional Requirements**
-
-- Available stock report  
-- Issued books report  
-- Overdue books report (optional)  
-
----
-
----
-
-# 4. External Interface Requirements
-
----
-
-## 4.1 User Interface
-
-The system shall provide:
-
-- Data-entry forms  
-- Navigation between modules  
-- Tables displaying records  
-- Basic validation messages  
-
-The interface must be simple and user-friendly.
-
----
-
-## 4.2 Hardware Interfaces
-
-No special hardware requirements.  
-Standard computer system is sufficient.
-
----
-
-## 4.3 Software Interfaces
-
-- SQLite Database  
-- Node  
-- Web Browser  
-
----
-
----
-
-# 5. Non-Functional Requirements
-
----
-
-## 5.1 Performance Requirements
-
-- System response time shall be minimal  
-- Database operations shall be efficient  
-- System resource usage shall remain low  
-
----
-
-## 5.2 Reliability
-
-- The system shall maintain accurate stock levels  
-- The system shall prevent data corruption  
-- The system shall ensure data consistency  
-
----
-
-## 5.3 Usability
-
-- Interface shall be easy to understand  
-- Minimal training required  
-- Logical workflow design  
-
----
-
-## 5.4 Security
-
-- Only authorized users may access the system (optional login)  
-- Data integrity must be preserved  
-
----
-
-## 5.5 Maintainability
-
-- Modular system design  
-- Easy updates and extensions  
-- Clean separation of components  
-
----
-
----
-
-# 6. Future Enhancements
-
-The following features are intentionally deferred:
-
-- Fine calculation automation  
-- Notification system  
-- Advanced reports  
-- Graphical dashboard  
-- Multi-user support  
-- Cloud synchronization  
-
----
-
----
-
-# 7. Appendix
-
-The Book Bank Management System serves as:
-
-- A learning project in software engineering  
-- A practical academic management tool  
-- A portfolio demonstration of database-driven applications  
-
----
-
-**End of Document**
+## 6. Data Requirements (Preliminary Schema)
+
+| Entity | Attributes |
+| :--- | :--- |
+| **User** | UserID (PK), Name, Email, Password, Role |
+| **Book** | BookID (PK), Title, Author, ISBN, Category, Status |
+| **Transaction** | TransactionID (PK), BookID (FK), UserID (FK), IssueDate, ReturnDate, Status |

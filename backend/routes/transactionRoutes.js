@@ -1,19 +1,14 @@
 import express from 'express';
-import {
-    issueBook,
-    returnBook,
-    fetchTransactions,
-    fetchTransactionById,
-    fetchTransactionsByStudent
-} from '../controllers/transactionController.js';
+import { issueBook, returnBook, getUserHistory } from '../controllers/transactionController.js';
+import { verifyToken, isAdmin } from '../middleware/authMiddleware.js';
+
 const router = express.Router();
 
-router.get('/', fetchTransactions);
-router.get('/:id', fetchTransactionById);
-router.get('/student/:studentId', fetchTransactionsByStudent);
-router.post('/issue', issueBook);
-router.post('/return', returnBook);
+// Admin only: Issue and Return
+router.post('/issue', verifyToken, isAdmin, issueBook);
+router.put('/return/:id', verifyToken, isAdmin, returnBook);
+
+// Authenticated: View history
+router.get('/user/:userId', verifyToken, getUserHistory);
 
 export default router;
-
-

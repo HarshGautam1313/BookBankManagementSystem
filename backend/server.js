@@ -1,36 +1,31 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-
-import './config/schema.js';
-
-import authRoutes from './routes/authRoutes.js';
-import bookRoutes from './routes/bookRoutes.js';
-import studentRoutes from './routes/studentRoutes.js';
+import db from './config/db.js';
+import authRoutes from './routes/authRoutes.js'; // Import auth routes
+import bookRoutes from './routes/bookRoutes.js'; // Import book routes
 import transactionRoutes from './routes/transactionRoutes.js';
-import reportRoutes from './routes/reportRoutes.js';
-
-import errorMiddleware from './middlewares/errorMiddleware.js';
-
-dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
-/* ROUTES */
-app.use('/api/auth', authRoutes);
-app.use('/api/books', bookRoutes);
-app.use('/api/students', studentRoutes);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/reports', reportRoutes);
+// API Routes
+app.use('/api/auth', authRoutes); // Mount auth routes
+app.use('/api/books', bookRoutes); // Mount book routes
+app.use('/api/transactions', transactionRoutes); // Mount transaction routes
 
-/* ERROR HANDLER */
-app.use(errorMiddleware);
+app.get('/', (req, res) => {
+    res.send('S-BBMS Backend is running!');
+});
 
-const PORT = process.env.PORT || 5000;
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: 'Something broke on the server!' });
+});
 
 app.listen(PORT, () => {
-    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
