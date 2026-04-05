@@ -3,12 +3,12 @@ import db from '../config/db.js';
 export const getLibraryStats = (req, res) => {
     try {
         // 1. Overall Totals
+        // Use single quotes 'issued' and 'available' for string values
         const totalBooks = db.prepare('SELECT COUNT(*) as count FROM books').get().count;
-        const issuedBooks = db.prepare('SELECT COUNT(*) as count FROM books WHERE status = "issued"').get().count;
-        const availableBooks = db.prepare('SELECT COUNT(*) as count FROM books WHERE status = "available"').get().count;
+        const issuedBooks = db.prepare("SELECT COUNT(*) as count FROM books WHERE status = 'issued'").get().count;
+        const availableBooks = db.prepare("SELECT COUNT(*) as count FROM books WHERE status = 'available'").get().count;
 
         // 2. Most Popular Books (Top 5)
-        // Counts how many times each book ID appears in the transactions table
         const topBooks = db.prepare(`
             SELECT b.title, COUNT(t.trans_id) as borrow_count 
             FROM books b 
@@ -38,7 +38,6 @@ export const getLibraryStats = (req, res) => {
             LIMIT 5
         `).all();
 
-        // Combine everything into one response object
         res.json({
             summary: {
                 totalBooks,

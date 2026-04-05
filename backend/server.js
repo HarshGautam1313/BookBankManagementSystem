@@ -5,6 +5,8 @@ import db from './config/db.js';
 import authRoutes from './routes/authRoutes.js'; // Import auth routes
 import bookRoutes from './routes/bookRoutes.js'; // Import book routes
 import transactionRoutes from './routes/transactionRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
+import smartRoutes from './routes/smartRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,6 +18,8 @@ app.use(express.json());
 app.use('/api/auth', authRoutes); // Mount auth routes
 app.use('/api/books', bookRoutes); // Mount book routes
 app.use('/api/transactions', transactionRoutes); // Mount transaction routes
+app.use('/api/analytics', analyticsRoutes); // Mount analytics routes
+app.use('/api/smart', smartRoutes); // Mount smart routes
 
 app.get('/', (req, res) => {
     res.send('S-BBMS Backend is running!');
