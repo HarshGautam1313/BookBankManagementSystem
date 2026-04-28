@@ -83,3 +83,26 @@ export const getUserHistory = (req, res) => {
         res.status(500).json({ message: 'Error fetching history', error: error.message });
     }
 };
+
+export const getAllTransactions = (req, res) => {
+    try {
+        // We join all three tables to get a human-readable log
+        const logs = db.prepare(`
+            SELECT 
+                t.trans_id, 
+                b.title as book_title, 
+                u.full_name as student_name, 
+                t.issue_date, 
+                t.return_date, 
+                t.status 
+            FROM transactions t 
+            JOIN books b ON t.book_id = b.book_id 
+            JOIN users u ON t.user_id = u.user_id 
+            ORDER BY t.trans_id DESC
+        `).all();
+        
+        res.json(logs);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching transaction logs', error: error.message });
+    }
+};

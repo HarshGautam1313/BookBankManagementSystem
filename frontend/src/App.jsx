@@ -5,6 +5,7 @@ import AuthPage        from "./pages/AuthPage";
 import AdminDashboard  from "./pages/AdminDashboard";
 import AdminAnalytics  from "./pages/AdminAnalytics";
 import StudentPortal   from "./pages/StudentPortal";
+import Transactions from './pages/Transactions';
 
 // Protect routes — redirect to login if no token
 function Protected({ children, role }) {
@@ -41,6 +42,9 @@ export default function App() {
         <Route path="/admin/analytics" element={
           <Protected role="admin"><AdminAnalytics /></Protected>
         } />
+        <Route path="/admin/transactions" element={
+          <Protected role="admin"><Transactions /></Protected>
+          } />
 
         {/* Student routes */}
         <Route path="/student" element={

@@ -11,13 +11,37 @@ export default function AdminDashboard() {
   const [selected, setSelected] = useState(null);
   const [toast, setToast]       = useState(null);
   const [loading, setLoading]   = useState(false);
+  
+  // --- User Search States ---
   const [users, setUsers]       = useState([]);
+  const [userSearch, setUserSearch] = useState("");
 
   const emptyBook = { title: "", author: "", isbn: "", category: "" };
   const [form, setForm] = useState(emptyBook);
   const [issueUserId, setIssueUserId] = useState("");
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { 
+    fetchAll(); 
+    fetchUsers(); // Initial load of users
+  }, []);
+
+  // Fetch users with optional search query
+  async function fetchUsers(query = "") {
+    try {
+      const res = await api.get(`/users?search=${query}`);
+      setUsers(res.data);
+    } catch (e) {
+      console.error("Failed to fetch users");
+    }
+  }
+
+  // Debounce user search to avoid hitting API on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchUsers(userSearch);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [userSearch]);
 
   async function fetchAll() {
     try {
@@ -69,7 +93,7 @@ export default function AdminDashboard() {
 
   async function handleIssue(e) {
     e.preventDefault();
-    if (!issueUserId) return showToast("Enter a student user ID.", true);
+    if (!issueUserId) return showToast("Please select a student.", true);
     setLoading(true);
     try {
       await api.post("/transactions/issue", { book_id: selected.book_id, user_id: issueUserId });
@@ -134,47 +158,53 @@ export default function AdminDashboard() {
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: ".85rem" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #1e2a38" }}>
-                  {["Title","Author","Category","ISBN","Status","Borrower","Actions"].map(h => (
-                    <th key={h} style={{ padding: "10px 16px", textAlign: "left", color: "#556070", fontWeight: 500, fontSize: ".75rem", letterSpacing: ".06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
+  <tr style={{ borderBottom: "1px solid #1e2a38" }}>
+    {["Title","Author","Category","ISBN","Available","Status","Borrower","Actions"].map(h => (
+      <th key={h} style={{ padding: "10px 16px", textAlign: "left", color: "#556070", fontWeight: 500, fontSize: ".75rem", letterSpacing: ".06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{h}</th>
+    ))}
+  </tr>
+</thead>
               <tbody>
-                {filtered.length === 0 ? (
-                  <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#2e3d52" }}>No books found.</td></tr>
-                ) : filtered.map(book => (
-                  <tr key={book.book_id} style={{ borderBottom: "1px solid #1a2130" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#0f1620"}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                    <td style={td()}><span style={{ color: "#e2e8f0", fontWeight: 500 }}>{book.title}</span></td>
-                    <td style={td()}>{book.author}</td>
-                    <td style={td()}>
-                      <span style={{ background: "#1a2540", color: "#8ab4f8", fontSize: ".72rem", padding: "3px 10px", borderRadius: 20, whiteSpace: "nowrap" }}>{book.category}</span>
-                    </td>
-                    <td style={td()}>{book.isbn || "—"}</td>
-                    <td style={td()}>
-                      <span style={{
-                        background: book.status === "available" ? "#0d1f14" : "#1f0d0d",
-                        color: book.status === "available" ? "#4caf8a" : "#f09595",
-                        fontSize: ".72rem", padding: "3px 10px", borderRadius: 20
-                      }}>{book.status}</span>
-                    </td>
-                    <td style={td()}>{book.current_borrower || "—"}</td>
-                    <td style={td()}>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "nowrap" }}>
-                        {book.status === "available" && (
-                          <button onClick={() => { setSelected(book); setModal("issue"); }} style={smBtn("#1a2540","#d4a853")}>Issue</button>
-                        )}
-                        {book.status === "issued" && book.trans_id && (
-                          <button onClick={() => handleReturn(book.trans_id)} style={smBtn("#1a1408","#d4a853")}>Return</button>
-                        )}
-                        <button onClick={() => { setSelected(book); setForm({title:book.title,author:book.author,isbn:book.isbn||"",category:book.category}); setModal("edit"); }} style={smBtn("#1a2540","#8ab4f8")}>Edit</button>
-                        <button onClick={() => handleDeleteBook(book.book_id)} style={smBtn("#1a0d0d","#f09595")}>Del</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map(book => (
+  <tr key={book.book_id} style={{ borderBottom: "1px solid #1a2130" }}
+    onMouseEnter={e => e.currentTarget.style.background = "#0f1620"}
+    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+    <td style={td()}><span style={{ color: "#e2e8f0", fontWeight: 500 }}>{book.title}</span></td>
+    <td style={td()}>{book.author}</td>
+    <td style={td()}>
+      <span style={{ background: "#1a2540", color: "#8ab4f8", fontSize: ".72rem", padding: "3px 10px", borderRadius: 20, whiteSpace: "nowrap" }}>{book.category}</span>
+    </td>
+    <td style={td()}>{book.isbn || "—"}</td>
+    
+    {/* NEW COLUMN: Available Copies */}
+    <td style={td()}>
+      <span style={{ color: book.available_count > 0 ? "#4caf8a" : "#f09595", fontWeight: 600 }}>
+        {book.available_count}
+      </span>
+    </td>
+
+    <td style={td()}>
+      <span style={{
+        background: book.status === "available" ? "#0d1f14" : "#1f0d0d",
+        color: book.status === "available" ? "#4caf8a" : "#f09595",
+        fontSize: ".72rem", padding: "3px 10px", borderRadius: 20
+      }}>{book.status}</span>
+    </td>
+    <td style={td()}>{book.current_borrower || "—"}</td>
+    <td style={td()}>
+      <div style={{ display: "flex", gap: 6, flexWrap: "nowrap" }}>
+        {book.status === "available" && (
+          <button onClick={() => { setSelected(book); setModal("issue"); }} style={smBtn("#1a2540","#d4a853")}>Issue</button>
+        )}
+        {book.status === "issued" && book.trans_id && (
+          <button onClick={() => handleReturn(book.trans_id)} style={smBtn("#1a1408","#d4a853")}>Return</button>
+        )}
+        <button onClick={() => { setSelected(book); setForm({title:book.title,author:book.author,isbn:book.isbn||"",category:book.category}); setModal("edit"); }} style={smBtn("#1a2540","#8ab4f8")}>Edit</button>
+        <button onClick={() => handleDeleteBook(book.book_id)} style={smBtn("#1a0d0d","#f09595")}>Del</button>
+      </div>
+    </td>
+  </tr>
+))}
               </tbody>
             </table>
           </div>
@@ -200,7 +230,7 @@ export default function AdminDashboard() {
       {(modal === "add" || modal === "edit") && (
         <Modal title={modal === "add" ? "Add New Book" : "Edit Book"} onClose={() => setModal(null)}>
           <form onSubmit={modal === "add" ? handleAddBook : handleEditBook}>
-            {[["Title *","title","text"],["Author *","author","text"],["Category *","category","text"],["ISBN","isbn","text"]].map(([lbl,key,type]) => (
+            {[["Title *","title","text"],["Author *","author","text"],["Category *","category","text"],["ISBN","isbn","text,"]].map(([lbl,key,type]) => (
               <div key={key} style={{ marginBottom: "1rem" }}>
                 <label style={labelStyle}>{lbl}</label>
                 <input type={type} value={form[key]} onChange={e => setForm({...form,[key]:e.target.value})} style={inputStyle} />
@@ -216,10 +246,29 @@ export default function AdminDashboard() {
       {modal === "issue" && selected && (
         <Modal title={`Issue: ${selected.title}`} onClose={() => setModal(null)}>
           <form onSubmit={handleIssue}>
-            <div style={{ marginBottom: "1rem" }}>
-              <label style={labelStyle}>Student User ID</label>
-              <input type="number" value={issueUserId} onChange={e => setIssueUserId(e.target.value)} placeholder="Enter user_id" style={inputStyle} />
-              <p style={{ fontSize: ".75rem", color: "#556070", marginTop: 6 }}>You can find user IDs from the database or student login.</p>
+            <div style={{ marginBottom: "1.2rem" }}>
+              <label style={labelStyle}>Find Student</label>
+              <input 
+                type="text" 
+                placeholder="Search name or email..." 
+                value={userSearch} 
+                onChange={e => setUserSearch(e.target.value)} 
+                style={{ ...inputStyle, marginBottom: "10px" }} 
+              />
+              <label style={labelStyle}>Select Student</label>
+              <select 
+                value={issueUserId} 
+                onChange={e => setIssueUserId(e.target.value)} 
+                style={inputStyle} 
+                required
+              >
+                <option value="">-- Choose a Student --</option>
+                {users.map(u => (
+                  <option key={u.user_id} value={u.user_id}>
+                    {u.full_name} ({u.email})
+                  </option>
+                ))}
+              </select>
             </div>
             <button type="submit" disabled={loading} style={{ ...btnStyle("#d4a853","#0d0a04"), width: "100%" }}>
               {loading ? "Issuing..." : "Confirm Issue"}

@@ -6,23 +6,22 @@ export const getBooks = (req, res) => {
     try {
         const { search } = req.query;
         
-        // This SQL query does the following:
-        // 1. Selects all columns from the books table
-        // 2. Left Joins with transactions to find the 'active' loan for that book
-        // 3. Left Joins with users to get the full_name of the student who has the book
+        // We add a subquery (SELECT COUNT(*)...) to calculate available copies for each book
         const query = `
             SELECT 
                 b.*, 
                 u.full_name as current_borrower, 
-                u.email as borrower_email
+                u.email as borrower_email,
+                (SELECT COUNT(*) FROM books b2 WHERE b2.isbn = b.isbn AND b2.status = 'available') as available_count
             FROM books b
             LEFT JOIN transactions t ON b.book_id = t.book_id AND t.status = 'active'
             LEFT JOIN users u ON t.user_id = u.user_id
-            WHERE b.title LIKE ? OR b.category LIKE ?
+            WHERE (b.title LIKE ? OR b.category LIKE ? OR b.author LIKE ?)
         `;
 
         const searchTerm = `%${search || ''}%`;
-        const books = db.prepare(query).all(searchTerm, searchTerm);
+        // Note: Added searchTerm three times for title, category, and author
+        const books = db.prepare(query).all(searchTerm, searchTerm, searchTerm);
 
         res.json(books);
     } catch (error) {

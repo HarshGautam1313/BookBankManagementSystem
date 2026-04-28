@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 const adminLinks = [
   { path: "/admin", label: "Dashboard", icon: "⊞" },
+  { path: "/admin/transactions", label: "Transactions", icon: "↺" }, // Kept
   { path: "/admin/analytics", label: "Analytics", icon: "◎" },
 ];
 
@@ -61,28 +62,34 @@ export default function Sidebar() {
       {/* Nav links */}
       <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
         {links.map(link => {
-          const active = location.pathname === link.path;
-          return (
-            <button key={link.path} onClick={() => navigate(link.path)} style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "9px 12px",
-              borderRadius: 8,
-              border: "none",
-              background: active ? "#1a2540" : "transparent",
-              color: active ? "#d4a853" : "#556070",
-              fontSize: "0.88rem",
-              fontFamily: "'DM Sans', sans-serif",
-              fontWeight: active ? 500 : 400,
-              cursor: "pointer",
-              textAlign: "left",
-              transition: "all 0.15s",
-              borderLeft: active ? "2px solid #d4a853" : "2px solid transparent",
-            }}>
-              <span style={{ fontSize: 14 }}>{link.icon}</span>
-              {link.label}
-            </button>
-          );
-        })}
+    // LOGIC: 
+    // 1. If it's the main dashboard (/admin), it must be an EXACT match.
+    // 2. For any other page, we use .startsWith() so sub-pages keep the link active.
+    const active = link.path === "/admin" 
+        ? location.pathname === "/admin" 
+        : location.pathname.startsWith(link.path);
+
+    return (
+        <button key={link.path} onClick={() => navigate(link.path)} style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "9px 12px",
+            borderRadius: 8,
+            border: "none",
+            background: active ? "#1a2540" : "transparent",
+            color: active ? "#d4a853" : "#556070",
+            fontSize: "0.88rem",
+            fontFamily: "'DM Sans', sans-serif",
+            fontWeight: active ? 500 : 400,
+            cursor: "pointer",
+            textAlign: "left",
+            transition: "all 0.15s",
+            borderLeft: active ? "2px solid #d4a853" : "2px solid transparent",
+        }}>
+            <span style={{ fontSize: 14 }}>{link.icon}</span>
+            {link.label}
+        </button>
+    );
+})}
       </nav>
 
       {/* User info + logout */}
