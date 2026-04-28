@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #0d1117;
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0d1117; }
+::-webkit-scrollbar-thumb { background: #1e2a38; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2e3d52; }
+
+/* Utility */
+.serif { font-family: 'DM Serif Display', serif; }
+.gold  { color: #d4a853; }
